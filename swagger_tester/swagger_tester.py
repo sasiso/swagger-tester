@@ -369,31 +369,33 @@ def swagger_test_yield(swagger_yaml_path=None, app_url=None, authorize_error=Non
                     
                 data_format = get_data_format(swagger_parser, path, action)
                 if data_format and data_format == 'binary':
-                    continue                    
+                    logger.warning(u'Skipping data validation for format binary')
 
-                # Get response data
-                if hasattr(response, 'content'):
-                    response_text = response.content
                 else:
-                    response_text = response.data
 
-                # Convert to str
-                if hasattr(response_text, 'decode'):
-                    response_text = response_text.decode('utf-8')
+                    # Get response data
+                    if hasattr(response, 'content'):
+                        response_text = response.content
+                    else:
+                        response_text = response.data
 
-                # Get json
-                try:
-                    response_json = json.loads(response_text)
-                except ValueError:
-                    response_json = response_text
+                    # Convert to str
+                    if hasattr(response_text, 'decode'):
+                        response_text = response_text.decode('utf-8')
 
-                if response.status_code in response_spec.keys():
-                    validate_definition(swagger_parser, response_spec[response.status_code], response_json)
-                elif 'default' in response_spec.keys():
-                    validate_definition(swagger_parser, response_spec['default'], response_json)
-                else:
-                    raise AssertionError('Invalid status code {0}. Expected: {1}'.format(response.status_code,
-                                                                                         response_spec.keys()))
+                    # Get json
+                    try:
+                        response_json = json.loads(response_text)
+                    except ValueError:
+                        response_json = response_text
+
+                    if response.status_code in response_spec.keys():
+                        validate_definition(swagger_parser, response_spec[response.status_code], response_json)
+                    elif 'default' in response_spec.keys():
+                        validate_definition(swagger_parser, response_spec['default'], response_json)
+                    else:
+                        raise AssertionError('Invalid status code {0}. Expected: {1}'.format(response.status_code,
+                                                                                             response_spec.keys()))
 
                 if wait_time_between_tests > 0:
                     time.sleep(wait_time_between_tests)

@@ -242,8 +242,9 @@ def get_data_format(swagger_parser, path, action):
     if path_spec is not None and action in path_spec.keys():
         for status_code in path_spec[action]['responses'].keys():
             resp = path_spec[action]['responses'][status_code]
-            if 'type' in resp['schema'].keys():
-                return resp['schema']['format']
+            if 'schema' in resp:
+                if 'type' in resp['schema'].keys():
+                    return resp['schema']['format']
     return None
     
 

@@ -224,6 +224,28 @@ def swagger_test(swagger_yaml_path=None, app_url=None, authorize_error=None,
                                 extra_headers=extra_headers):
         pass
 
+def get_data_format(swagger_parser, path, action):
+    """Get the format of response data
+
+    Args:
+        swagger_parser: instance of swagger parser.
+        path: path of the request.
+        action: HTTP action.
+
+
+    Returns:
+        string representing format of data ex. 'binary'
+    """
+    path_name, path_spec = swagger_parser.get_path_spec(path)
+
+    # Get all status code
+    if path_spec is not None and action in path_spec.keys():
+        for status_code in path_spec[action]['responses'].keys():
+            resp = path_spec[action]['responses'][status_code]
+            if 'type' in resp['schema'].keys():
+                return resp['schema']['format']
+    return None
+    
 
 def swagger_test_yield(swagger_yaml_path=None, app_url=None, authorize_error=None,
                        wait_time_between_tests=0, use_example=True, dry_run=False,
@@ -343,6 +365,10 @@ def swagger_test_yield(swagger_yaml_path=None, app_url=None, authorize_error=Non
                 except (TypeError, ValueError) as exc:
                     logger.warning(u'Error in the swagger file: {0}'.format(repr(exc)))
                     continue
+                    
+                data_format = get_data_format(swagger_parser, path, action)
+                if data_format and data_format == 'binary':
+                    continue                    
 
                 # Get response data
                 if hasattr(response, 'content'):
